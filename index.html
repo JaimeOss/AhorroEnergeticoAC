@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ahorro Energético AC - Cartagena</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='8' y='14' width='48' height='28' rx='4' fill='%232563eb'/><rect x='12' y='34' width='40' height='5' rx='1.5' fill='%2393c5fd' opacity='.6'/><line x1='20' y1='46' x2='20' y2='56' stroke='%2393c5fd' stroke-width='2' stroke-dasharray='3 2'/><line x1='28' y1='46' x2='28' y2='58' stroke='%2393c5fd' stroke-width='2' stroke-dasharray='3 2'/><line x1='36' y1='46' x2='36' y2='56' stroke='%2393c5fd' stroke-width='2' stroke-dasharray='3 2'/><line x1='44' y1='46' x2='44' y2='58' stroke='%2393c5fd' stroke-width='2' stroke-dasharray='3 2'/></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Optimizaciones para móvil */
+        body { -webkit-tap-highlight-color: transparent; }
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #2563eb;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 5px;
+        }
+        /* Animación suave para cambios */
+        .result-value {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-900 min-h-screen pb-10">
+
+    <!-- Navbar Movil -->
+    <nav class="bg-blue-700 text-white p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-xl mx-auto flex justify-between items-center">
+            <h1 class="font-bold text-lg">Ahorro Energético AC</h1>
+            <span class="text-[10px] bg-blue-600 px-2 py-1 rounded">V 3.2</span>
+        </div>
+    </nav>
+
+    <main class="max-w-xl mx-auto p-4 space-y-6">
+        
+        <!-- Header Info -->
+        <section class="bg-gradient-to-br from-blue-600 to-blue-800 text-white p-6 rounded-3xl shadow-lg">
+            <p class="text-blue-100 text-xs uppercase font-bold tracking-widest mb-1">Análisis Regional: Cartagena</p>
+            <h2 class="text-2xl font-black">¿Inverter o Tradicional?</h2>
+            <p class="text-sm opacity-80 mt-2">Calcula cuánto puedes ahorrar según el tamaño de tu habitación y el calor local.</p>
+        </section>
+
+        <!-- Configuración / Inputs -->
+        <section class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+            
+            <!-- Cantidad de Equipos -->
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-3 text-center">Cantidad de aires a simular</label>
+                <div class="flex items-center justify-between bg-gray-50 p-2 rounded-2xl border border-gray-100">
+                    <button onclick="changeQty(-1)" class="w-14 h-14 bg-white shadow-sm rounded-xl flex items-center justify-center active:scale-95 transition-transform border border-gray-100">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
+                    </button>
+                    <div class="text-center">
+                        <span id="qtyLabel" class="text-3xl font-black text-blue-700">1</span>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase">Unidades</p>
+                    </div>
+                    <button onclick="changeQty(1)" class="w-14 h-14 bg-white shadow-sm rounded-xl flex items-center justify-center active:scale-95 transition-transform border border-gray-100">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <!-- kWh Input -->
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Costo kWh (COP)</label>
+                    <input type="number" id="kwhPrice" value="1150" 
+                           class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3 text-lg font-bold focus:border-blue-500 outline-none transition-all" 
+                           oninput="calculate()">
+                </div>
+                
+                <!-- Temp Selector -->
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Temperatura: <span id="tempLabel" class="text-blue-600">24</span>°C</label>
+                    <input type="range" id="targetTemp" min="16" max="28" value="24" class="w-full slider-thumb" oninput="updateTemp(this.value)">
+                </div>
+            </div>
+
+            <!-- Horas de Uso -->
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Uso diario continuo: <span id="hoursLabel" class="text-blue-600">10</span>h</label>
+                <input type="range" id="usageHours" min="1" max="24" value="10" class="w-full slider-thumb" oninput="updateHours(this.value)">
+            </div>
+        </section>
+
+        <!-- Resultados 9000 BTU -->
+        <section class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative border-t-4 border-t-blue-500">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 uppercase tracking-tight">9.000 BTU</h3>
+                    <p class="text-xs text-blue-600 font-bold italic">Habitaciones (12-16 m²)</p>
+                </div>
+                <span class="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase">Pequeño</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 p-3 rounded-2xl text-center">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 italic">Convencional</p>
+                    <p class="text-sm font-bold text-gray-600 result-value" id="c9-cost">--</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-2xl text-center border border-green-100 text-green-700">
+                    <p class="text-[10px] font-bold uppercase mb-1 italic">Inverter</p>
+                    <p class="text-sm font-bold result-value" id="i9-cost">--</p>
+                </div>
+            </div>
+
+            <div class="bg-blue-600 text-white p-5 rounded-2xl shadow-md">
+                <p class="text-[10px] font-bold uppercase opacity-80 mb-1">Ahorro Mensual Estimado</p>
+                <p class="text-3xl font-black result-value" id="save9">--</p>
+                <div id="stat9" class="mt-3 text-xs bg-blue-700/50 p-2 rounded-lg leading-tight font-medium">--</div>
+            </div>
+        </section>
+
+        <!-- Resultados 12000 BTU -->
+        <section class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative border-t-4 border-t-indigo-500">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 uppercase tracking-tight">12.000 BTU</h3>
+                    <p class="text-xs text-indigo-600 font-bold italic">Salas y Áreas (17-25 m²)</p>
+                </div>
+                <span class="text-[10px] font-bold bg-slate-100 px-2 py-1 rounded text-slate-500 uppercase">Grande</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 p-3 rounded-2xl text-center">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 italic">Convencional</p>
+                    <p class="text-sm font-bold text-gray-600 result-value" id="c12-cost">--</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-2xl text-center border border-green-100 text-green-700">
+                    <p class="text-[10px] font-bold uppercase mb-1 italic">Inverter</p>
+                    <p class="text-sm font-bold result-value" id="i12-cost">--</p>
+                </div>
+            </div>
+
+            <div class="bg-indigo-600 text-white p-5 rounded-2xl shadow-md">
+                <p class="text-[10px] font-bold uppercase opacity-80 mb-1">Ahorro Mensual Estimado</p>
+                <p class="text-3xl font-black result-value" id="save12">--</p>
+                <div id="stat12" class="mt-3 text-xs bg-indigo-700/50 p-2 rounded-lg leading-tight font-medium">--</div>
+            </div>
+        </section>
+
+        <!-- Especificaciones Técnicas (Visibles) -->
+        <section class="bg-slate-800 text-slate-300 p-6 rounded-3xl shadow-inner space-y-4">
+            <h4 class="text-sm font-bold uppercase tracking-widest text-white border-b border-slate-700 pb-2">Especificaciones Técnicas</h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-[11px] leading-relaxed">
+                <!-- Tabla 9k -->
+                <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                    <p class="font-bold text-blue-400 mb-2 uppercase tracking-tighter">Consumo 9.000 BTU (Habitación)</p>
+                    <div class="flex justify-between py-1 border-b border-slate-800">
+                        <span>Equipo Tradicional (Fijo)</span>
+                        <span class="font-mono text-white">0.82 kWh/h</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-800">
+                        <span>Inverter (Hora 1 - Pico)</span>
+                        <span class="font-mono text-white">0.95 kWh/h</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span>Inverter (Estabilizado)</span>
+                        <span class="font-mono text-white">0.38 kWh/h</span>
+                    </div>
+                </div>
+
+                <!-- Tabla 12k -->
+                <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700">
+                    <p class="font-bold text-indigo-400 mb-2 uppercase tracking-tighter">Consumo 12.000 BTU (Salas)</p>
+                    <div class="flex justify-between py-1 border-b border-slate-800">
+                        <span>Equipo Tradicional (Fijo)</span>
+                        <span class="font-mono text-white">1.15 kWh/h</span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-800">
+                        <span>Inverter (Hora 1 - Pico)</span>
+                        <span class="font-mono text-white">1.25 kWh/h</span>
+                    </div>
+                    <div class="flex justify-between py-1">
+                        <span>Inverter (Estabilizado)</span>
+                        <span class="font-mono text-white">0.52 kWh/h</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-[10px] bg-slate-900/30 p-4 rounded-xl space-y-2 opacity-80">
+                <p><b class="text-white">Ajuste de Temperatura:</b> Se calcula un incremento/decremento del <b class="text-white">8%</b> por cada grado de diferencia respecto a los <b class="text-white">24°C</b> (base de confort).</p>
+                <p><b class="text-white">Contexto Cartagena:</b> La simulación asume una temperatura ambiente promedio de <b class="text-white">32°C</b>. En la primera hora, el equipo Inverter opera a máxima frecuencia para compensar el calor acumulado en las paredes.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Lógica de Estado
+        let quantity = 1;
+
+        const config = {
+            k9: { peak: 0.95, steady: 0.82, invSteady: 0.38 },
+            k12: { peak: 1.25, steady: 1.15, invSteady: 0.52 }
+        };
+
+        function changeQty(delta) {
+            quantity = Math.max(1, Math.min(10, quantity + delta));
+            document.getElementById('qtyLabel').innerText = quantity;
+            calculate();
+        }
+
+        function updateHours(v) {
+            document.getElementById('hoursLabel').innerText = v;
+            calculate();
+        }
+
+        function updateTemp(v) {
+            document.getElementById('tempLabel').innerText = v;
+            calculate();
+        }
+
+        function format(v) {
+            return new Intl.NumberFormat('es-CO', { 
+                style: 'currency', 
+                currency: 'COP', 
+                maximumFractionDigits: 0 
+            }).format(v);
+        }
+
+        function calculate() {
+            const price = parseFloat(document.getElementById('kwhPrice').value) || 0;
+            const hours = parseInt(document.getElementById('usageHours').value) || 0;
+            const temp = parseInt(document.getElementById('targetTemp').value) || 24;
+            const days = 30;
+
+            const tempFactor = 1 + (24 - temp) * 0.08;
+
+            function getMonthly(type, btu) {
+                const data = btu === 9 ? config.k9 : config.k12;
+                let dailyKwh = 0;
+
+                if (type === 'conv') {
+                    dailyKwh = hours * data.steady * tempFactor;
+                } else {
+                    if (hours <= 1) {
+                        dailyKwh = data.peak * hours * tempFactor;
+                    } else {
+                        dailyKwh = (data.peak * tempFactor) + ((hours - 1) * data.invSteady * tempFactor);
+                    }
+                }
+                return dailyKwh * days * price * quantity;
+            }
+
+            const c9 = getMonthly('conv', 9);
+            const i9 = getMonthly('inv', 9);
+            const s9 = c9 - i9;
+
+            const c12 = getMonthly('conv', 12);
+            const i12 = getMonthly('inv', 12);
+            const s12 = c12 - i12;
+
+            // Renderizado
+            document.getElementById('c9-cost').innerText = format(c9);
+            document.getElementById('i9-cost').innerText = format(i9);
+            document.getElementById('save9').innerText = format(s9);
+            updateStatusText('stat9', i9, c9);
+
+            document.getElementById('c12-cost').innerText = format(c12);
+            document.getElementById('i12-cost').innerText = format(i12);
+            document.getElementById('save12').innerText = format(s12);
+            updateStatusText('stat12', i12, c12);
+        }
+
+        function updateStatusText(id, invCost, convCost) {
+            const el = document.getElementById(id);
+            if (convCost <= 0) { el.innerText = "--"; return; }
+            const reduction = Math.max(0, ((1 - (invCost / convCost)) * 100).toFixed(0));
+            
+            if (reduction < 5) {
+                el.innerHTML = "❄️ Uso breve: El ahorro es limitado por el esfuerzo inicial.";
+            } else {
+                el.innerHTML = `✅ Eficiencia Inverter: <b>${reduction}%</b> de ahorro energético mensual.`;
+            }
+        }
+
+        window.onload = calculate;
+    </script>
+</body>
+</html>
